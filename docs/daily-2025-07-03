@@ -1,0 +1,54 @@
+# 📅 Daily Log – 2025-07-03
+
+## ✅ Summary
+
+- 🐳 Successfully set up LocalStack with Docker and integrated Terraform for AWS resource provisioning.  
+- 🛠️ Created a start script that:  
+  - Runs LocalStack container with proper port mappings.  
+  - Waits for LocalStack to be healthy using the correct health endpoint (`/_localstack/health`).  
+  - Runs Terraform `init` and `apply` from the correct directory.  
+  - Extracts API Gateway ID and invoke URL from Terraform outputs.  
+  - Adds the API Gateway hostname to `/etc/hosts` without port numbers for easier local DNS resolution.  
+  - Runs a test `curl` request to confirm API Gateway endpoint is working locally.  
+
+- 🧹 Created a stop-and-remove script that:  
+  - Stops and removes LocalStack Docker containers.  
+  - Removes the API Gateway hostname entry from `/etc/hosts` to clean up local DNS entries.  
+
+- 🔐 Configured passwordless `sudo` for the hosts file edits in scripts to avoid password prompts during automation.  
+
+- 📂 Moved Terraform configuration files into a dedicated `terraform` folder to keep project organized without breaking relative paths.  
+
+- 🐛 Fixed Terraform Lambda deployment by adjusting the path to the Lambda zip package (`lambda_function_payload.zip`) after restructuring folders.  
+
+---
+
+## ⚠️ Problems Encountered
+
+- ❌ Initially used incorrect LocalStack health check endpoint causing script to hang; fixed by switching to `/_localstack/health`.  
+
+- 🌐 Struggled with DNS resolution for LocalStack API Gateway endpoints due to port numbers in host entries; resolved by adding hostname to `/etc/hosts` **without** the port.  
+
+- 📂 Terraform couldn’t find Lambda zip file after moving files; resolved by updating relative path to `filebase64sha256()` and Lambda `filename`.  
+
+- 🧹 LocalStack container stopping/removal script initially did not clean up `/etc/hosts`; added logic to handle hostname removal.  
+
+- 🔒 Avoided repeated `sudo` password prompts by configuring `/etc/sudoers` for passwordless editing of hosts file.  
+
+---
+
+## 🚀 Next Steps
+
+- 🧪 Add automated tests for Lambda functions locally.  
+
+- 🔄 Expand API Gateway routes and Lambda logic.  
+
+- 💾 Explore adding a persistent backend storage setup in LocalStack.  
+
+- 🏗️ Work on 3-tier architecture design by adding frontend proxy or additional layers.  
+
+- 🤖 Automate full project lifecycle with a Makefile or dedicated CLI tool.  
+
+---
+
+*End of log.*
