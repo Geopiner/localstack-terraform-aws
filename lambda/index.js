@@ -1,51 +1,103 @@
-const AWS = require('aws-sdk');                               // Import AWS SDK for JavaScript
-const dynamodb = new AWS.DynamoDB.DocumentClient({            // Create DynamoDB DocumentClient instance
-    endpoint: 'http://host.docker.internal:4566',                        // LocalStack DynamoDB endpoint URL
-    region: 'us-east-1',                                      // AWS region (arbitrary for LocalStack)
-    accessKeyId: 'test',                                      // Dummy access key for LocalStack
-    secretAccessKey: 'test',                                  // Dummy secret key for LocalStack
-})
+const AWS = require('aws-sdk');
+const dynamodb = new AWS.DynamoDB.DocumentClient({
+  endpoint: 'http://host.docker.internal:4566',
+  region: 'us-east-1',
+  accessKeyId: 'test',
+  secretAccessKey: 'test',
+});
 
-const TABLE_NAME = process.env.DYNAMODB_TABLE;                // DynamoDB table name from Lambda environment variables
+const TABLE_NAME = process.env.DYNAMODB_TABLE;
 
-exports.handler = async (event) => {                          // Lambda function handler, receives event object
-    console.log("DYNAMODB_TABLE env var:", process.env.DYNAMODB_TABLE);    // Log the full incoming event for debugging
+exports.handler = async (event) => {
+  console.log("Received event:", JSON.stringify(event));
 
-    // Extract 'id' from path parameters; with API Gateway proxy integration 'proxy' holds the path
-    const id = event.pathParameters ? event.pathParameters.proxy : 'default-id';
+  const method = event.httpMethod;
+  const id = event.pathParameters ? event.pathParameters.id : null;
 
-    // Extract 'name' from query string parameters, default to 'Anonymous' if missing
-    const name = event.queryStringParameters ? event.queryStringParameters.name : 'Anonymous';
-
-    // Prepare DynamoDB put item parameters
-    const params = {
-        TableName: TABLE_NAME,                                // Target DynamoDB table
-        Item: {                                               // Item object to insert
-            id: id,                                           // Primary key id
-            name: name,                                       // Name attribute from query string
-            createdAt: new Date().toISOString(),              // Timestamp for item creation
-        }, 
-    }; 
-    
-    console.log("Preparing to write to DynamoDB with params:", JSON.stringify(params));
-
-    try { 
-        await dynamodb.put(params).promise();                 // Execute DynamoDB put operation asynchronously
-        console.log("Write complete, returning response");
-        
-        // On success, return 200 with confirmation and inserted item
+  try {
+    if (method === 'POST') {
+      // Create user from JSON body
+      const body = JSON.parse(event.body || '{}');
+      if (!body.id || !body.name) {
         return {
-            statusCode: 200,
-            body: JSON.stringify({
-                message: 'Item saved.',
-                item: params.Item,
-            }),
+          statusCode: 400,
+          body: JSON.stringify({ error: "Missing 'id' or 'name' in request body" }),
         };
-    } catch (error) {
-      console.error("Error writing to DynamoDB:", error);     // Log error details to CloudWatch / logs
+      }
+
+      const params = {
+        TableName: TABLE_NAME,
+        Item: {
+          id: body.id,
+          name: body.name,
+          createdAt: new Date().toISOString(),
+        },
+      };
+
+      await dynamodb.put(params).promise();
       return {
-        statusCode: 500,                                      // Return 500 Internal Server Error on failure
-        body: JSON.stringify({ error: 'Could not save item.' }),
+        statusCode: 201,
+        body: JSON.stringify({ message: "User created", user: params.Item }),
+      };
+
+    } else if (method === 'GET') {
+      if (!id) {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({ error: "Missing user 'id' in path" }),
+        };
+      }
+
+      const params = {
+        TableName: TABLE_NAME,
+        Key: { id },
+      };
+
+      const result = await dynamodb.get(params).promise();
+      if (!result.Item) {
+        return {
+          statusCode: 404,
+          body: JSON.stringify({ error: "User not found" }),
+        };
+      }
+
+      return {
+        statusCode: 200,
+        body: JSON.stringify(result.Item),
+      };
+
+    } else if (method === 'DELETE') {
+      if (!id) {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({ error: "Missing user 'id' in path" }),
+        };
+      }
+
+      const params = {
+        TableName: TABLE_NAME,
+        Key: { id },
+      };
+
+      await dynamodb.delete(params).promise();
+
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ message: `User ${id} deleted` }),
+      };
+
+    } else {
+      // Unsupported HTTP method
+      return {
+        statusCode: 405,
+        body: JSON.stringify({ error: `Method ${method} not allowed` }),
       };
     }
+  } catch (error) {
+    console.error("Error handling request:", error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: "Internal server error" }),
+    };
+  }
 };

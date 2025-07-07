@@ -1,0 +1,32 @@
+# 📅 Daily Log – 2025-07-04
+
+## ✅ Summary
+
+- ⚙️ Added detailed API Gateway resources for user management, including POST (create), GET (read), and DELETE (remove) endpoints.  
+- 🔌 Integrated Lambda function with API Gateway methods using AWS_PROXY integration for seamless request handling.  
+- 🔑 Configured Lambda permissions to allow API Gateway invocation securely.  
+- 🧪 Tested API endpoints locally via `curl`, confirming correct response flows and DynamoDB interaction on LocalStack.  
+- 🛠️ Improved Lambda function code to handle JSON request bodies, path parameters, and HTTP methods with proper validation and error responses.  
+- 🐛 Fixed DynamoDB item validation errors by ensuring required keys (like `id`) are passed correctly in the Lambda event processing.  
+
+---
+
+## ⚠️ Problems Encountered
+
+- 📝 Encountered `ValidationException` when DynamoDB putItem lacked required keys; resolved by restructuring Lambda logic to extract data from request body and path correctly.  
+- 🌐 API Gateway returned “Missing Authentication Token” for incomplete resource configuration; resolved by adding explicit user resource and methods instead of catch-all proxy.  
+- 🔄 Had to comment out catch-all proxy resource temporarily to avoid conflicts with specific user routes.  
+
+---
+
+## 🚀 Next Steps
+
+- 🧹 Test DELETE endpoint thoroughly to confirm resource removal works as expected.  
+- 🔄 Add support for updating user data with PUT or PATCH methods.  
+- 📦 Prepare deployment scripts to push this LocalStack setup to actual AWS environment.  
+- 🧪 Write automated integration tests for the API endpoints to streamline future development.  
+- 📚 Document API routes and Lambda behavior in the project README or separate API docs.  
+
+---
+
+*End of log.*
