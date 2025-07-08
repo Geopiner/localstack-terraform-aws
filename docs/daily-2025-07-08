@@ -1,0 +1,49 @@
+# 📅 Daily Log – 2025-07-08
+
+## ✅ Summary
+
+- 🔁 Rebuilt full LocalStack environment using Terraform and automated testing via `test-api.sh`.  
+- 📂 Restructured project folders: separated Lambda code into `lambda/`, Terraform configs into `terraform/`, and ZIP files into consistent deployment paths.  
+- ⚙️ Updated Terraform files to align with new folder structure:
+  - `lambda.tf` for Lambda resources
+  - `api_gateway.tf` for all API Gateway resources
+  - `iam.tf` for IAM roles and permissions
+  - `outputs.tf` for referencing `api_gateway_id` and invoke URL
+- 🔌 Integrated API Gateway with two Lambda functions:
+  - `/debug` (test endpoint)
+  - `/user` with `POST`, `GET`, and `DELETE` routes backed by DynamoDB
+- 🔑 Created IAM role with `sts:AssumeRole` trust policy for Lambda, and applied `aws_lambda_permission` to allow API Gateway invocations.  
+- 📦 Packaged Lambda code properly with `index.js` and `node_modules` using `zip -r` from the correct context.  
+- 🧪 Validated all API endpoints locally with `curl`:
+  - ✅ `/debug`
+  - ✅ `POST /user`
+  - ✅ `GET /user/{id}`
+  - ✅ `DELETE /user/{id}`
+- 🧹 Confirmed DynamoDB operations (create, read, delete) working as expected inside Lambda using `DocumentClient`.  
+- 🧪 Script automates apply, test, optional destroy, and `/etc/hosts` patch for local DNS routing.
+
+---
+
+## ⚠️ Problems Encountered
+
+- ❌ Lambda failed initially due to missing `aws-sdk` — fixed by ensuring `node_modules` was zipped correctly.  
+- 🔁 Got 502/internal error responses from API Gateway when Lambda failed to load — traced back to packaging issues.  
+- 🌐 Local DNS resolution failed until correct API hostname was appended to `/etc/hosts` dynamically by the script.  
+- 🧨 Terraform destroy wiped stack after tests — later commented out to preserve state during development.
+
+---
+
+## 🚀 Next Steps
+
+- 🧱 Add `PUT` or `PATCH` support for user updates in the API.  
+- 🧪 Expand test script to check for failure cases like invalid input or missing fields.  
+- 📄 Begin full documentation of:
+  - API routes and expected request/response schemas
+  - Folder structure and Terraform module layout
+  - Lambda logic and environment setup  
+- ☁️ Prepare remote AWS-compatible version of infrastructure (for actual cloud deployment later).  
+- 🔐 Add fine-grained IAM policies to Lambda roles (e.g., limit to specific table operations).
+
+---
+
+*End of log.*

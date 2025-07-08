@@ -50,6 +50,8 @@ else
 fi
 
 echo "Running test curl request..."
-curl "${INVOKE_URL}test-id?name=George"
+curl -s -X POST "${INVOKE_URL}user" \
+  -H "Content-Type: application/json" \
+  -d '{"id": "test-id", "name": "George"}' | jq
 
-echo "Done."
+echo -e "\nTest user created. LocalStack is ready."
