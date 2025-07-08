@@ -1,10 +1,11 @@
+# This creates a DynamoDB table in AWS (or LocalStack in our case)
 resource "aws_dynamodb_table" "my_table" {
-  name           = "my-table"                    # Name of the DynamoDB table
-  billing_mode   = "PAY_PER_REQUEST"             # Use on-demand capacity mode (no need to specify read/write units)
-  hash_key       = "id"                          # Partition key attribute name (primary key)
+  name         = var.dynamodb_table_name  # The table’s name, set from the variable above
+  billing_mode = "PAY_PER_REQUEST"        # You pay only for what you use, no capacity setup needed
+  hash_key     = "id"                      # The primary key for the table — this must be unique for each item
 
   attribute {
-    name = "id"                                  # Attribute name for the partition key
-    type = "S"                                   # Attribute type "S" means String
+    name = "id"                           # Define the "id" attribute as the key
+    type = "S"                           # "S" means string type (like text)
   }
 }
