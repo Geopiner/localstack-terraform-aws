@@ -1,5 +1,9 @@
-# main.tf is the central place to define core AWS resources or glue everything together.
-# Right now it’s empty because this project organizes resources into separate files 
-# (like api_gateway.tf, lambda.tf, dynamodb.tf) for better clarity and management.
-#
-# Use main.tf to add shared resources, global settings, or dependencies if needed later.
+// ─────────────────────────────────────────────────────────────────────────────
+// Main Terraform Configuration Entry Point
+//
+// This file is intentionally left empty as this project organizes AWS resources
+// into dedicated files (e.g., api_gateway.tf, lambda.tf, dynamodb.tf) for clarity.
+//
+// Use this file for global settings, shared resources, or cross-cutting dependencies
+// if your project expands or requires central coordination.
+// ─────────────────────────────────────────────────────────────────────────────

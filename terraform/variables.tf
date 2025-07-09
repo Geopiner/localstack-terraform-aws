@@ -1,3 +1,13 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Terraform Variables for Project Configuration
+//
+// These variables define key configurable values used throughout the Terraform
+// setup. They enable customization of AWS resource names, Lambda function settings,
+// runtime environment, and tagging, while providing sensible defaults.
+//
+// Each variable has a description for clarity and type enforcement for safety.
+// ─────────────────────────────────────────────────────────────────────────────
+
 # AWS region used by Terraform (LocalStack ignores this but Terraform needs it syntactically)
 variable "aws_region" {
   description = "AWS region used by Terraform. Required even for LocalStack."

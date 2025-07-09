@@ -1,0 +1,13 @@
+# 📅 Daily Log – 2025-07-09
+
+## ✅ Summary
+
+- Tried integrating S3 with LocalStack but faced persistent bucket creation hangs and DNS resolution problems.  
+- Confirmed that the common fixes like `s3_use_path_style` are outdated and ineffective.  
+- Decided to remove all S3-related resources from the project.  
+- Concluded that LocalStack’s S3 support is unreliable for this use case.  
+- Moving away from LocalStack entirely and will start a new project using actual AWS with a fresh repo.  
+
+---
+
+*End of log.*

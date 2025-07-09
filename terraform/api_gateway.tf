@@ -1,38 +1,49 @@
-# Create the main REST API in API Gateway — your API’s “website name”
+// ─────────────────────────────────────────────────────────────────────────────
+// API Gateway REST API Setup
+// This block creates the main REST API which serves as the root container
+// for all your API resources and routes. It's like the "website" for your API.
+// ─────────────────────────────────────────────────────────────────────────────
 resource "aws_api_gateway_rest_api" "api_gateway" {
-  name = var.api_gateway_name  # Friendly name for the API (e.g., "my-api")
+  name = var.api_gateway_name  // Friendly name, e.g. "my-api"
 }
 
-# Create the "/user" resource under the root (like a folder named "user")
+// ─────────────────────────────────────────────────────────────────────────────
+// API Gateway Resources Setup
+// These resources define the API paths/endpoints your API will expose:
+// - "/user" for general user operations
+// - "/user/{id}" for operations on a specific user by ID
+// - "/debug" for a simple debug/test endpoint
+// ─────────────────────────────────────────────────────────────────────────────
 resource "aws_api_gateway_resource" "user" {
   rest_api_id = aws_api_gateway_rest_api.api_gateway.id
   parent_id   = aws_api_gateway_rest_api.api_gateway.root_resource_id
   path_part   = "user"
 }
 
-# Create the dynamic "/user/{id}" resource for user-specific paths
 resource "aws_api_gateway_resource" "user_id" {
   rest_api_id = aws_api_gateway_rest_api.api_gateway.id
   parent_id   = aws_api_gateway_resource.user.id
   path_part   = "{id}"
 }
 
-# Create the "/debug" resource under the root
 resource "aws_api_gateway_resource" "debug" {
   rest_api_id = aws_api_gateway_rest_api.api_gateway.id
   parent_id   = aws_api_gateway_rest_api.api_gateway.root_resource_id
   path_part   = "debug"
 }
 
-# Define POST method on "/user" (for creating users)
+// ─────────────────────────────────────────────────────────────────────────────
+// API Gateway Methods
+// These define the HTTP verbs allowed on each resource, such as POST, GET, DELETE.
+// Authorization is set to NONE here, meaning no authentication is required.
+// ─────────────────────────────────────────────────────────────────────────────
 resource "aws_api_gateway_method" "create_user" {
   rest_api_id   = aws_api_gateway_rest_api.api_gateway.id
   resource_id   = aws_api_gateway_resource.user.id
   http_method   = "POST"
-  authorization = "NONE"  # No auth for now
+  authorization = "NONE"
 }
 
-# Define GET method on "/user/{id}" (for fetching user info)
 resource "aws_api_gateway_method" "get_user" {
   rest_api_id   = aws_api_gateway_rest_api.api_gateway.id
   resource_id   = aws_api_gateway_resource.user_id.id
@@ -40,7 +51,6 @@ resource "aws_api_gateway_method" "get_user" {
   authorization = "NONE"
 }
 
-# Define DELETE method on "/user/{id}" (for deleting user)
 resource "aws_api_gateway_method" "delete_user" {
   rest_api_id   = aws_api_gateway_rest_api.api_gateway.id
   resource_id   = aws_api_gateway_resource.user_id.id
@@ -48,7 +58,6 @@ resource "aws_api_gateway_method" "delete_user" {
   authorization = "NONE"
 }
 
-# Define GET method on "/debug"
 resource "aws_api_gateway_method" "debug_get" {
   rest_api_id   = aws_api_gateway_rest_api.api_gateway.id
   resource_id   = aws_api_gateway_resource.debug.id
@@ -56,7 +65,12 @@ resource "aws_api_gateway_method" "debug_get" {
   authorization = "NONE"
 }
 
-# Integrate POST /user with user Lambda function (AWS_PROXY for Lambda Proxy integration)
+// ─────────────────────────────────────────────────────────────────────────────
+// API Gateway Integrations with Lambda
+// These link each API method to the appropriate Lambda function using AWS_PROXY
+// integration type, allowing Lambda to handle the entire request/response.
+// Note: Lambda is invoked internally using HTTP POST regardless of method.
+// ─────────────────────────────────────────────────────────────────────────────
 resource "aws_api_gateway_integration" "create_user" {
   rest_api_id             = aws_api_gateway_rest_api.api_gateway.id
   resource_id             = aws_api_gateway_resource.user.id
@@ -66,17 +80,15 @@ resource "aws_api_gateway_integration" "create_user" {
   uri                     = aws_lambda_function.user.invoke_arn
 }
 
-# Integrate GET /user/{id} with user Lambda
 resource "aws_api_gateway_integration" "get_user" {
   rest_api_id             = aws_api_gateway_rest_api.api_gateway.id
   resource_id             = aws_api_gateway_resource.user_id.id
   http_method             = aws_api_gateway_method.get_user.http_method
-  integration_http_method = "POST"  # Lambda is invoked with POST internally
+  integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.user.invoke_arn
 }
 
-# Integrate DELETE /user/{id} with user Lambda
 resource "aws_api_gateway_integration" "delete_user" {
   rest_api_id             = aws_api_gateway_rest_api.api_gateway.id
   resource_id             = aws_api_gateway_resource.user_id.id
@@ -86,7 +98,6 @@ resource "aws_api_gateway_integration" "delete_user" {
   uri                     = aws_lambda_function.user.invoke_arn
 }
 
-# Integrate GET /debug with debug Lambda
 resource "aws_api_gateway_integration" "debug_get_lambda" {
   rest_api_id             = aws_api_gateway_rest_api.api_gateway.id
   resource_id             = aws_api_gateway_resource.debug.id
@@ -96,25 +107,33 @@ resource "aws_api_gateway_integration" "debug_get_lambda" {
   uri                     = aws_lambda_function.debug.invoke_arn
 }
 
-# Allow API Gateway to invoke user Lambda
+// ─────────────────────────────────────────────────────────────────────────────
+// Lambda Permissions for API Gateway
+// These permissions allow API Gateway service to invoke the specified Lambda
+// functions. Without these, the integration would fail due to access denied.
+// ─────────────────────────────────────────────────────────────────────────────
 resource "aws_lambda_permission" "api_gateway_permission_user" {
   statement_id  = "AllowAPIGatewayInvokeUser"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.user.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn = "${aws_api_gateway_rest_api.api_gateway.execution_arn}/*/*"
+  source_arn    = "${aws_api_gateway_rest_api.api_gateway.execution_arn}/*/*"
 }
 
-# Allow API Gateway to invoke debug Lambda
 resource "aws_lambda_permission" "api_gateway_permission_debug" {
   statement_id  = "AllowAPIGatewayInvokeDebug"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.debug.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn = "${aws_api_gateway_rest_api.api_gateway.execution_arn}/*/*"
+  source_arn    = "${aws_api_gateway_rest_api.api_gateway.execution_arn}/*/*"
 }
 
-# Create a single deployment including all integrations and methods (user + debug)
+// ─────────────────────────────────────────────────────────────────────────────
+// API Gateway Deployment and Stage
+// Deployment bundles all your API methods and integrations into a deployable unit.
+// The stage (here "prod") is the environment alias through which you access the API.
+// create_before_destroy ensures safe updates by creating new deployment before deleting old.
+// ─────────────────────────────────────────────────────────────────────────────
 resource "aws_api_gateway_deployment" "deployment" {
   depends_on = [
     aws_api_gateway_integration.create_user,

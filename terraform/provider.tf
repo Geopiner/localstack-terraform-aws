@@ -1,22 +1,33 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// AWS Provider Configuration for Terraform using LocalStack
+//
+// This block configures the AWS provider plugin for Terraform, targeting LocalStack
+// running locally instead of real AWS. It sets dummy credentials and disables checks
+// irrelevant for LocalStack to avoid errors during apply.
+//
+// The 'endpoints' override redirects AWS service calls to LocalStack’s local URLs,
+// enabling offline and cost-free development.
+// ─────────────────────────────────────────────────────────────────────────────
+
 provider "aws" {
-  # Which AWS region you want to use — LocalStack ignores this but Terraform needs it anyway
+  # AWS region (required by Terraform but ignored by LocalStack)
   region = var.aws_region
 
-  # These are dummy keys because LocalStack doesn't require real AWS credentials
+  # Dummy AWS credentials since LocalStack doesn't require real keys
   access_key = "test"
   secret_key = "test"
 
-  # Skip checks that would normally verify your credentials are real — not needed for LocalStack
+  # Disable validation that real AWS credentials exist (LocalStack exception)
   skip_credentials_validation = true
 
-  # Skip EC2 metadata service checks because LocalStack doesn't simulate EC2 instances
+  # Disable metadata API check because LocalStack doesn't emulate EC2 metadata service
   skip_metadata_api_check = true
 
-  # Override the default AWS service URLs to point to LocalStack running on your machine
+  # Redirect AWS service endpoints to LocalStack local endpoints
   endpoints {
-    lambda     = "http://localhost:4566"  # Local Lambda service endpoint
-    iam        = "http://localhost:4566"  # Local IAM service endpoint
-    dynamodb   = "http://localhost:4566"  # Local DynamoDB service endpoint
-    apigateway = "http://localhost:4566"  # Local API Gateway service endpoint
+    lambda     = "http://localhost:4566"
+    iam        = "http://localhost:4566"
+    dynamodb   = "http://localhost:4566"
+    apigateway = "http://localhost:4566"
   }
 }
